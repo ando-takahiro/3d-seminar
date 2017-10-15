@@ -34,9 +34,15 @@ function framework(start, update, end) {
         return b;
       };
 
+      gl.enable(gl.BLEND);
+      gl.enable(gl.DEPTH_TEST);
+      gl.enable(gl.SCISSOR_TEST);
       gl.clearColor(1, 1, 1, 1);
+      gl.clearDepth(1.0);
+      gl.depthFunc(gl.LESS);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       start(gl);
+      gl.flush();
 
       const instance = {active: true};
       function animate(timestamp) {
@@ -44,6 +50,7 @@ function framework(start, update, end) {
           if (timestamp !== undefined) {
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             update(gl, timestamp);
+            gl.flush();
           }
           instance.requestId = window.requestAnimFrame(animate);
         }

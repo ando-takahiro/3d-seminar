@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8">
 
-    <title>WebGL through Three JS</title>
+    <title>vertices, indices, shaders, and matrices with parrots!</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -48,13 +48,9 @@
       <!-- Any section element inside of this container is displayed as a slide -->
       <div class="slides">
         <section>
-          <h2>Vertices, Indices, Matrices, and Shaders</h2>
+          <h2>Vertices, Indices, Shaders, and Matrices</h2>
           <h3>with</h3>
-          <h1>Parrots!</h1>
-          <div>
-            <a href="http://www.dimroc.com/reveal.js-threejs/">Based on WEBGL WITH THREE JS</a>
-          </div>
-          <canvas data-sample="webgl_parrot"></canvas>
+          <canvas class="hero" data-sample="webgl_parrot"></canvas>
         </section>
 
         <section>
@@ -67,13 +63,13 @@
             <h2>COLOR</h2>
           </section>
           <section>
-            <h2>See how to make them</h2>
-            <h4>by</h4>
+            <h3>See how to make shape and color</h3>
+            <h4>using</h4>
             <h2>VERTEX,</h3>
             <h2>INDEX,</h3>
-            <h2>MATRIX,</h3>
+            <h2>SHADER,</h3>
             <h4>and</h4>
-            <h2>SHADER</h3>
+            <h2>MATRIX</h3>
           </section>
         </section>
 
@@ -165,7 +161,7 @@ gl.drawArrays(
             <h2>So all we need</h2>
             <h3>is</h3>
             <h1>VERTICES!</h1>
-            <h2>Let GPU fill among vertices</h2>
+            <h2>Let the GPU fill in the vertices</h2>
           </section>
         </section>
 
@@ -257,7 +253,7 @@ gl.drawElements(
 
           <section>
             <h3>A lot of indices in 3D programming.</h3>
-            <h3>but Intension is always</h3>
+            <h3>but intention is always</h3>
             <h1>reference.</h4>
           </section>
         </section>
@@ -272,8 +268,8 @@ gl.drawElements(
           </section>
 
           <section>
-            <h3>In moder 3D pragramming, We always need shaders.</h3>
-            <h3>To make explanation simple let me talk only:</h3>
+            <h3>In modern 3D programming, We always need shaders.</h3>
+            <h3>To make the explanation simple let me talk only about:</h3>
             <h1>Vertex shader</h1>
             <h4>and</h4>
             <h1>Pixel shader</h1>
@@ -288,11 +284,11 @@ gl.drawElements(
             <h3>3. (GPU & driver)</h3>
             <h2>4. <span class="highlight">Pixel Shader</span></h2>
             <h3>5. Frame buffer</h3>
-            <h5>(strictly this is incorrect)</h5>
+            <h5>(this is just a rough sketch)</h5>
           </section>
 
           <section>
-            <h3>veretex shader is to make vertex</h3>
+            <h3>vertex shader is to make vertex</h3>
             <h1>awesome!</h1>
             <div class="float_left">
               <pre class="code description">
@@ -321,7 +317,7 @@ gl.useProgram(program);
           <section>
             <h3>Vertex shader can change</h3>
             <h1>POSITION</h1>
-            <h3>to change shape, awesome!</h3>
+            <h3>to change to awesome shapes!</h3>
             <div class="float_left">
               <pre class="code description">
 const vertexShaderString = 
@@ -600,13 +596,13 @@ gl.uniformMatrix4fv(uniformProjection, false, projection);
           </section>
 
           <section>
-            <h3>In short, we need to give position to camera. we say this</h3>
-            <h1>View Transform</h1>
+            <h3>In short, we need to give position to camera. we call this</h3>
+            <h1>view transformation</h1>
           </section>
 
           <section>
             <h2>shader:</h2>
-            <h3>model is also just <span class="highlight">multiply!</span></h3>
+            <h3>view is also just <span class="highlight">multiply!</span></h3>
             <pre class="code description">
 const vertexShaderString = 
 'attribute vec3 vertexPosition;  \n\
@@ -629,7 +625,7 @@ const fragmentShaderString =
 
           <section>
             <h1>handedness</h1>
-            <h3>camera is also opposite</h3>
+            <h3>camera's z is also opposite</h3>
             <image src='/images/handedness.png'/>
           </section>
 
@@ -714,7 +710,7 @@ gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
 
           <section>
             <h3>also, let's try to</h3>
-            <h1>animation</h1>
+            <h1>animate</h1>
             <h3>by changing matrices on every frame</h3>
             <pre class="code description">
 mat4.rotate(model, model, 0.01, [0.0, 1.0, 0.0]);
@@ -728,7 +724,7 @@ mat4.rotate(model2, model2, 0.01, [0.0, 1.0, 0.0]);
           </section>
 
           <section>
-            <h3>in addition, generally, model matrix operations is explained like below</h3>
+            <h3>in addition, generally, model matrix operations are explained as follows:</h3>
             <pre class="code description">
 const model = mat4.create();
 mat4.identify(model);
@@ -778,6 +774,19 @@ mat4.set(model,
             <canvas class="fullscreen" data-sample="webgl_parrot_party"></canvas>
           </section>
         </section>
+
+<!------------------------------------------------------------------------------
+  Credit
+------------------------------------------------------------------------------->
+        <section>
+          <section>
+            <h3>thanks</h3>
+            <div><a href="http://www.dimroc.com/reveal.js-threejs/">Based on WEBGL WITH THREE JS</a></div>
+            <div><a href='http://perfume-global.com/'>Perfume GLOBAL SITE</a></div>
+            <div><a href='https://opengameart.org/'>8x8 ASCII Bitmap Font, with C source</a></div>
+            <div>TBD: add more links</div>
+          </section>
+        </section>
       </div>
     </div>
 
@@ -822,8 +831,6 @@ mat4.set(model,
         // App specific js
         "js/reveal.min.js",
         "js/stats_bootstrap.js",
-        "js/samples/framework.js",
-        "js/samples/parrot_sequencer.js",
         "js/samples.js",
         "js/dat.gui.bootstrap.js",
 

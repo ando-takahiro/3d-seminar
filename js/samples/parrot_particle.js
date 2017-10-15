@@ -1,7 +1,5 @@
-function parrotSequencer(sequence, loop, audioId) {
-
-  // prepend null span
-  sequence.unshift({ duration: -1.0, objects: [] });
+// Let's think parrots as particles
+function parrotParticle(sequence, loop, audioId) {
 
   const animList = [
     'parrot',
@@ -49,6 +47,7 @@ void main(void) {
     view *
     model *
     voxel *
+    // trick for early culling if voxel is transparent
     vec4(vertexPosition * voxelColor.a, 1.);
 
   vertexColor = voxelColor;
@@ -88,17 +87,18 @@ void main(void) {
   let uniformView, uniformModel, uniformVoxelRotation;
   let ext;
   let time;
-  let spanTime;
-  let currentSpan;
-  let lasTweenResult;
+  let waitingGenerators;
+  let particles, particleGenerators;
+  let lastTimestamp;
   let animations = {}, voxelColorAttrLoc;
 
   function start(gl) {
     ext = gl.getExtension('ANGLE_instanced_arrays');
     time = 0;
-    spanTime = 0.0;
-    currentSpan = 0;
-    lasTweenResult = [];
+    particles = [];
+    particleGenerators = [];
+    waitingGenerators = [...sequence];
+    lastTimestamp = 0.0;
 
     // start audio
     if (audio) {
@@ -164,8 +164,8 @@ void main(void) {
     const projection = mat4.create();
     const fovy = 0.5;
     const aspect = gl.canvas.width / gl.canvas.height;
-    const near = 0.000001;
-    const far = 100000;
+    const near = 0.001;
+    const far = 1000;
     mat4.perspective(projection, fovy, aspect, near, far);
     const uniformProjection = gl.getUniformLocation(program, "projection");
     gl.uniformMatrix4fv(uniformProjection, false, projection);
@@ -175,57 +175,132 @@ void main(void) {
     uniformVoxelScale = gl.getUniformLocation(program, 'voxelScale');
   }
   
-  function tween() {
-    const cur = sequence[currentSpan];
-    return cur.objects.map(obj => {
-      const {name, tweens} = obj;
-      const result = {
-        name: name,
-        modelTranslation: [0, 0, 0],
-        modelRotation: [0, 0, 0],
-        voxelScale: [1, 1, 1],
-        voxelRotation: [0, 0, 0],
-      };
+  function interpolateKeyFrames(property) {
+    const lastValue = [...(property.keyFrames[0].value || [])];
 
-      tweens.forEach(t => {
-        const {transition, name, values} = t;
-        const f = Tweener.easingFunctions[transition || 'easeInOutCubic'];
-        values.forEach((v, index) => {
-          if (v) {
-            result[name][index] = f(spanTime, v[0], v[1] - v[0], cur.duration);
+    return {
+      ...property,
+      keyFrames: property.keyFrames.map(keyFrame => {
+        if (keyFrame.value) {
+          for (let i = 0; i < Math.max(lastValue.length, keyFrame.value.length); i++) {
+            lastValue[i] = typeof keyFrame.value[i] === 'number' ? keyFrame.value[i] : lastValue[i];
           }
-        });
-      });
+        }
 
-      return result;
-    });
+        return {
+          ...keyFrame,
+          value: [...lastValue]
+        };
+      })
+    };
   }
 
-  function nextSpan() {
-    currentSpan++;
-    spanTime = 0.0;
-
-    if (loop && currentSpan >= sequence.length) {
-      currentSpan = 0;
-    }
+  function spawnParticle(definition) {
+    return {
+      definition: definition,
+      begin: time,
+      end: time + definition.lifeTime,
+      anim: definition.anim,
+      modelTranslation: [0, 0, 0],
+      modelRotation: [0, 0, 0],
+      voxelScale: [1, 1, 1],
+      voxelRotation: [0, 0, 0],
+      properties: definition.properties.map(interpolateKeyFrames)
+    };
   }
 
-  function sequencer(deltaTime) {
-    if (currentSpan < sequence.length) {
-      spanTime += deltaTime;
-
-      lastTweenResult = tween();
-
-      const cur = sequence[currentSpan];
-      if (spanTime >= cur.duration) {
-        nextSpan();
+  // keyFrames should be sorted by time
+  function findKeyFramePair(keyFrames, age) {
+    let i = 0;
+    for (; i < keyFrames.length; i++) {
+      if (age < keyFrames[i].time) {
+        break;
       }
     }
 
-    return lastTweenResult;
+    if (i === 0) {
+      return [keyFrames[0], keyFrames[0]];
+    } else if (i >= keyFrames.length) {
+      const last = keyFrames[keyFrames.length - 1];
+      return [last, last];
+    } else {
+      return [keyFrames[i - 1], keyFrames[i]];
+    }
   }
 
-  let lastTimestamp = 0;
+  function updateParticle(p) { // p is particle, this function updates p
+    const age = time - p.begin;
+    p.properties.forEach(prop => {
+      const pair = findKeyFramePair(prop.keyFrames, age);
+      const dest = p[prop.name];
+      for (let i = 0; i < dest.length; i++) {
+        const firstElem = pair[0].value[i];
+        const secondElem = pair[1].value[i];
+        if (typeof firstElem === 'number' && typeof secondElem === 'number') {
+          // tween
+          const deltaTime = pair[1].time - pair[0].time;
+          if (deltaTime > 0) {
+            const transition = pair[1].transition || 'easeInOutCubic';
+            const f = Tweener.easingFunctions[transition];
+            dest[i] = f(age - pair[0].time, firstElem, secondElem - firstElem, deltaTime);
+          } else {
+            dest[i] = firstElem;
+          }
+        } else if (typeof firstElem === 'number') {
+          dest[i] = firstElem;
+        } else if (typeof secondElem === 'number') {
+          dest[i] = secondElem;
+        }
+      }
+    });
+  }
+
+  function sequencer() {
+    // activate generators
+    particleGenerators.push(...waitingGenerators.filter(gen => gen.begin <= time));
+    waitingGenerators = waitingGenerators.filter(gen => gen.begin > time);
+
+    // do generate
+    particleGenerators.forEach(
+      gen => particles.push(...gen.eval(time).map(spawnParticle))
+    ); 
+    // GC generators
+    particleGenerators = particleGenerators.filter(gen => time < gen.end);
+
+    // update particles
+    particles.forEach(updateParticle);
+
+    // GC particles
+    particles = particles.filter(p => p.end >= time);
+
+    if (loop && waitingGenerators.length <= 0 && particles.length <= 0 && particleGenerators.length <= 0) {
+      time = 0;
+      waitingGenerators = [...sequence];
+    }
+  }
+
+  function renderParticle(gl, obj) {
+    const model = mat4.create();
+
+    mat4.identity(model);
+    mat4.translate(model, model, obj.modelTranslation);
+    mat4.rotateX(model, model, obj.modelRotation[0]);
+    mat4.rotateY(model, model, obj.modelRotation[1]);
+    mat4.rotateZ(model, model, obj.modelRotation[2]);
+    gl.uniformMatrix4fv(uniformModel, false, model);
+
+    gl.uniform3fv(uniformVoxelRotation, obj.voxelRotation);
+    gl.uniform3fv(uniformVoxelScale, obj.voxelScale);
+
+    const anim = animations[obj.anim];
+    const index = Math.floor((time * anim.length) % anim.length);
+    gl.bindBuffer(gl.ARRAY_BUFFER, anim[index]);
+    gl.enableVertexAttribArray(voxelColorAttrLoc);
+    gl.vertexAttribPointer(voxelColorAttrLoc, 4, gl.FLOAT, false, 0, 0);
+
+    ext.drawElementsInstancedANGLE(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0, resolution * resolution);
+  }
+
   function update(gl, timestamp) {
     if (lastTimestamp <= 0) {
       lastTimestamp = timestamp;
@@ -235,26 +310,9 @@ void main(void) {
     time += deltaTime;
     lastTimestamp = timestamp;
 
-    const model = mat4.create();
-    sequencer(deltaTime).forEach(obj => {
-      mat4.identity(model);
-      mat4.translate(model, model, obj.modelTranslation);
-      mat4.rotateX(model, model, obj.modelRotation[0]);
-      mat4.rotateY(model, model, obj.modelRotation[1]);
-      mat4.rotateZ(model, model, obj.modelRotation[2]);
-      gl.uniformMatrix4fv(uniformModel, false, model);
+    sequencer();
 
-      gl.uniform3fv(uniformVoxelRotation, obj.voxelRotation);
-      gl.uniform3fv(uniformVoxelScale, obj.voxelScale);
-
-      const anim = animations[obj.name];
-      const index = Math.floor((time * anim.length) % anim.length);
-      gl.bindBuffer(gl.ARRAY_BUFFER, anim[index]);
-      gl.enableVertexAttribArray(voxelColorAttrLoc);
-      gl.vertexAttribPointer(voxelColorAttrLoc, 4, gl.FLOAT, false, 0, 0);
-
-      ext.drawElementsInstancedANGLE(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0, resolution * resolution);
-    });
+    particles.forEach(p => renderParticle(gl, p));
   }
 
   function end() {

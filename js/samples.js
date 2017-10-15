@@ -56,7 +56,9 @@
     "lib/js/tw.js",
     "lib/js/screenfull.min.js",
     "js/samples/framework.js",
-    "js/samples/parrot_sequencer.js",
+    "js/samples/parrot_particle.js",
+    "js/samples/parrot_particle_spawner.js",
+    "js/samples/parrot_particle_intro.js",
 
     // TODO: move anims
     "js/parrot_anim.js",

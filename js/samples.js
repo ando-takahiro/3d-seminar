@@ -55,10 +55,12 @@
     "lib/js/gl-matrix-min.js",
     "lib/js/tw.js",
     "lib/js/screenfull.min.js",
+    "js/samples/font8x8.js",
     "js/samples/framework.js",
     "js/samples/parrot_particle.js",
     "js/samples/parrot_particle_spawner.js",
     "js/samples/parrot_particle_intro.js",
+    "js/samples/parrot_particle_ticker.js",
 
     // TODO: move anims
     "js/parrot_anim.js",

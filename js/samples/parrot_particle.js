@@ -1,5 +1,5 @@
 // Let's think parrots as particles
-function parrotParticle(sequence, loop, audioId) {
+function parrotParticle(sequenceFn, loop, audioId) {
 
   const animList = [
     'parrot',
@@ -97,7 +97,7 @@ void main(void) {
     time = 0;
     particles = [];
     particleGenerators = [];
-    waitingGenerators = [...sequence];
+    waitingGenerators = [...sequenceFn()];
     lastTimestamp = 0.0;
 
     // start audio
@@ -201,8 +201,10 @@ void main(void) {
       begin: time,
       end: time + definition.lifeTime,
       anim: definition.anim,
+      animOffset: definition.animOffset || 0,
       modelTranslation: [0, 0, 0],
       modelRotation: [0, 0, 0],
+      modelScale: [1, 1, 1],
       voxelScale: [1, 1, 1],
       voxelRotation: [0, 0, 0],
       properties: definition.properties.map(interpolateKeyFrames)
@@ -275,25 +277,26 @@ void main(void) {
 
     if (loop && waitingGenerators.length <= 0 && particles.length <= 0 && particleGenerators.length <= 0) {
       time = 0;
-      waitingGenerators = [...sequence];
+      waitingGenerators = [...sequenceFn()];
     }
   }
 
-  function renderParticle(gl, obj) {
+  function renderParticle(gl, particle) {
     const model = mat4.create();
 
     mat4.identity(model);
-    mat4.translate(model, model, obj.modelTranslation);
-    mat4.rotateX(model, model, obj.modelRotation[0]);
-    mat4.rotateY(model, model, obj.modelRotation[1]);
-    mat4.rotateZ(model, model, obj.modelRotation[2]);
+    mat4.translate(model, model, particle.modelTranslation);
+    mat4.rotateX(model, model, particle.modelRotation[0]);
+    mat4.rotateY(model, model, particle.modelRotation[1]);
+    mat4.rotateZ(model, model, particle.modelRotation[2]);
+    mat4.scale(model, model, particle.modelScale);
     gl.uniformMatrix4fv(uniformModel, false, model);
 
-    gl.uniform3fv(uniformVoxelRotation, obj.voxelRotation);
-    gl.uniform3fv(uniformVoxelScale, obj.voxelScale);
+    gl.uniform3fv(uniformVoxelRotation, particle.voxelRotation);
+    gl.uniform3fv(uniformVoxelScale, particle.voxelScale);
 
-    const anim = animations[obj.anim];
-    const index = Math.floor((time * anim.length) % anim.length);
+    const anim = animations[particle.anim];
+    const index = Math.floor((time * anim.length + particle.animOffset) % anim.length);
     gl.bindBuffer(gl.ARRAY_BUFFER, anim[index]);
     gl.enableVertexAttribArray(voxelColorAttrLoc);
     gl.vertexAttribPointer(voxelColorAttrLoc, 4, gl.FLOAT, false, 0, 0);

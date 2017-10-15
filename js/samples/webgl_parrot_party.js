@@ -1,5 +1,5 @@
 (function() {
-  window.samples.webgl_parrot_party = parrotParticle([
+  window.samples.webgl_parrot_party = parrotParticle(() => [
     parrotParticleSpawner(0, [
       introCharacter('parrot', 16),
       introCharacter('lptm', -16),
@@ -12,5 +12,6 @@
       introCharacter('parrot', 10, -5),
       introCharacter('lptm', -30, -200),
     ]),
+    parrotParticleTicker(0.0, 'PARTY OR DIE'),
   ], false, 'party-bgm');
 })();

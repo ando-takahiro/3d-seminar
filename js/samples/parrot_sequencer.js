@@ -1,4 +1,4 @@
-function parrotSequencer(sequence, loop) {
+function parrotSequencer(sequence, loop, audioId) {
 
   // prepend null span
   sequence.unshift({ duration: -1.0, objects: [] });
@@ -61,6 +61,8 @@ void main(void) {
   gl_FragColor = vertexColor;
 }`;
 
+  const audio = audioId && document.getElementById(audioId);
+
   const vertices = [
     -1,-1,-1,  1,-1,-1,  1, 1,-1, -1, 1,-1,
     -1,-1, 1,  1,-1, 1,  1, 1, 1, -1, 1, 1,
@@ -86,9 +88,9 @@ void main(void) {
   let uniformView, uniformModel, uniformVoxelRotation;
   let ext;
   let time;
-  let spanTime = 0.0;
-  let currentSpan = 0;
-  let lasTweenResult = [];
+  let spanTime;
+  let currentSpan;
+  let lasTweenResult;
   let animations = {}, voxelColorAttrLoc;
 
   function start(gl) {
@@ -98,6 +100,10 @@ void main(void) {
     currentSpan = 0;
     lasTweenResult = [];
 
+    // start audio
+    if (audio) {
+      audio.play();
+    }
 
     const vertexShader = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vertexShader, vertexShaderString);
@@ -251,7 +257,13 @@ void main(void) {
     });
   }
 
+  function end() {
+    if (audio) {
+      audio.pause();
+    }
+  }
+
   // Register app.
   // See js/framework.js for details.
-  return framework(start, update);
+  return framework(start, update, end);
 };

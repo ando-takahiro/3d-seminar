@@ -1,6 +1,6 @@
 const _frameworkGCFuncs = [];
 
-function framework(start, update) {
+function framework(start, update, end) {
   const glBufferGCList = [];
   const id = Math.random();
   let defaultCanvasSize;
@@ -58,11 +58,11 @@ function framework(start, update) {
           instance.requestId = undefined;
         }
 
-        console.log('cleanup gl: ' + id);
-
         if (canvas.classList.contains('fullscreen')) {
           screenfull.exit();
         }
+
+        if (end) end();
 
         const numTextureUnits = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
         for (let unit = 0; unit < numTextureUnits; ++unit) {

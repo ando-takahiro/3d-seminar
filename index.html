@@ -782,8 +782,10 @@ mat4.set(model,
     </div>
 
     <script src="lib/js/head.min.js"></script>
+    <audio id='party-bgm' src='audio/perfume-free-bgm.mp3' preload />
     <script>
-      head.js(
+      const audio = document.getElementById('party-bgm');
+      audio.addEventListener('canplay', () => head.js(
         "lib/js/jquery.min.js",
         "lib/js/jquery.hotkeys.js",
         "lib/js/underscore.min.js",
@@ -846,8 +848,7 @@ mat4.set(model,
               { src: 'js/youtube.js', async: true, condition: function() { return $("#ytplayer").length > 0 } },
             ]
           });
-        });
-
+        }));
     </script>
   </body>
 </html>

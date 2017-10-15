@@ -5,7 +5,7 @@ function parrotParticleTicker(begin, str, options = {}) {
     anim: 'parrot',
     generatorLifeTime: str.length * 2.0 + 3,
     particleLifeTime: 10.0,
-    position: [40, 0, 0],
+    position: [40, 0, -20],
     rotation: [0, 0, 0],
     parrotSize: 3.0,
 
@@ -16,6 +16,7 @@ function parrotParticleTicker(begin, str, options = {}) {
   const orgParrotSize = 32;
   const parrotScale = params.parrotSize / orgParrotSize;
   const generationCycle = params.parrotSize / velocity;
+  const totalColumns = 8 * str.length;
   let lastTime = -1;
   let accumTime = 0;
   let currentIndex = 0;
@@ -34,7 +35,7 @@ function parrotParticleTicker(begin, str, options = {}) {
     return {
       lifeTime: lifeTime,
       anim: params.anim,
-      animOffset: -currentIndex,
+      animOffset: totalColumns - currentIndex,
       properties: [
         {
           name: 'modelTranslation',

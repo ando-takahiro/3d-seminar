@@ -22,15 +22,24 @@ function parrotParticleTicker(begin, str, options = {}) {
   let currentIndex = 0;
 
   function generateParrot(x, y) {
-    const pos = [
-      -x * params.parrotSize + params.position[0],
-      y * params.parrotSize + params.position[1],
-      params.position[2],
-    ];
-
     const fadeTime = 1.0;
     const walkTime = params.parrotLifeTime - fadeTime * 2;
     const lifeTime = params.particleLifeTime;
+
+    const model = makeModelMatrix(params.position, params.rotation);
+
+    const fromLocal = [
+      -x * params.parrotSize,
+      y * params.parrotSize,
+      0
+    ];
+    const from = vec3.create();
+    vec3.transformMat4(from, fromLocal, model);
+
+    const toLocal = [...fromLocal];
+    toLocal[0] -= velocity * lifeTime;
+    const to = vec3.create();
+    vec3.transformMat4(to, toLocal, model);
 
     return {
       lifeTime: lifeTime,
@@ -40,8 +49,8 @@ function parrotParticleTicker(begin, str, options = {}) {
         {
           name: 'modelTranslation',
           keyFrames: [
-            {time: 0, value: pos},
-            {time: lifeTime, value: [pos[0] - velocity * lifeTime], transition: 'linear'},
+            {time: 0, value: from},
+            {time: lifeTime, value: to, transition: 'linear'},
           ]
         },
         {

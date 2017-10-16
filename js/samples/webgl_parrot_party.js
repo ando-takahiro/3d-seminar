@@ -115,14 +115,51 @@
   }
 
   function cut3() {
+    const center = [0, 0, 100];
     const bitmap = [
       ['parrot', null],
       ['sirocco', 'loveparrot'],
     ];
 
+    const lookDown = quat.create();
+    quat.rotateX(lookDown, lookDown, -Math.PI * 0.2);
+    const lookRight = quat.create();
+    quat.rotateY(lookRight, lookRight, Math.PI * 0.4);
+    const rotRight = quat.create();
+    quat.rotateZ(rotRight, rotRight, Math.PI * 0.4);
+    const q1 = quat.create();
+    quat.mul(q1, lookDown, lookDown);
+    // quat.mul(q1, rotRight, lookDown);
+    quat.mul(q1, lookRight, lookDown);
     return [
-      parrotParticleTicker(0.0, 'More speed... Fast! Faster!! FASTEST!!!'),
-      parrotParticleSpawner(0, parrotParticleBitmap(bitmap))
+      parrotParticleTicker(0.0, 'More speed... Fast! Faster!! FASTEST!!!', {
+        position: [0, -20, 50],
+        rotation: [-Math.PI * 0.5, 0, Math.PI * 0.5],
+      }),
+      parrotParticleSpawner(0, parrotParticleBitmap(bitmap)),
+      parrotParticleSpawner(0, [
+        parrotParticleCamera(15.0, [
+          {
+            name: 'cameraRotation',
+            keyFrames: [
+              {time: 0, value: [0, 0, 0, 1]},
+              {time: 1, value: [0, 0, 0, 1]},
+              // {time: 3, value: lookDown},
+              {time: 3, value: q1},
+            ],
+          },
+          {
+            name: 'cameraTranslation',
+            keyFrames: [
+              {time: 0, value: center},
+              // {time: 3, value: [null, null, 130]},
+              {time: 3, value: [40, 20, 130]},
+              {time: 14, value: [null, null, 240], transition: 'linear'},
+            ],
+          }
+        ]),
+      ]),
+      parrotParticleTicker(0.0, 'GPU! GPU! GPU! GPU!'),
     ];
   }
 

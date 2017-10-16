@@ -1,31 +1,4 @@
 // Let's think parrots as particles
-
-function makeModelMatrix(translation, rotation, scale) {
-  const model = mat4.create();
-
-  if (translation) {
-    mat4.translate(model, model, translation);
-  }
-  if (rotation) {
-    mat4.rotateX(model, model, rotation[0]);
-    mat4.rotateY(model, model, rotation[1]);
-    mat4.rotateZ(model, model, rotation[2]);
-  }
-  if (scale) {
-    mat4.scale(model, model, scale);
-  }
-
-  return model;
-}
-
-function makeViewMatrix(translation, rotation, scale) {
-  const view = makeModelMatrix(translation, rotation, scale);
-
-  mat4.invert(view, view);
-
-  return view;
-}
-
 function parrotParticle(sequenceFn, loop, audioId) {
 
   const vertexShaderString = `
@@ -228,7 +201,7 @@ void main(void) {
         ...common,
 
         cameraTranslation: [0, 0, 0],
-        cameraRotation: [0, 0, 0],
+        cameraRotation: [0, 0, 0, 1], // sorry, only camera rotation is quaternion
       };
     } else {
       return {

@@ -28,11 +28,6 @@ function makeViewMatrix(translation, rotation, scale) {
 
 function parrotParticle(sequenceFn, loop, audioId) {
 
-  const animList = [
-    'parrot',
-    'lptm',
-  ];
-
   const vertexShaderString = `
 attribute vec3 vertexPosition;
 attribute vec2 voxelPosition;
@@ -168,8 +163,8 @@ void main(void) {
     voxelColorAttrLoc = gl.getAttribLocation(program, "voxelColor");
     ext.vertexAttribDivisorANGLE(voxelColorAttrLoc, 1);
 
-    animations = animList.reduce((ret, key) => {
-      ret[key] = window[`${key}Anim`].map((anim, index) => {
+    animations = Object.keys(window.anims).reduce((ret, name) => {
+      ret[name] = window.anims[name].map((anim, index) => {
         const voxelColorBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, voxelColorBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(anim), gl.STATIC_DRAW);
@@ -336,7 +331,7 @@ void main(void) {
     gl.uniform3fv(uniformVoxelScale, particle.voxelScale);
 
     const anim = animations[particle.anim];
-    const index = Math.floor((scene.time * anim.length + particle.animOffset) % anim.length);
+    const index = Math.floor((scene.time * 7 + particle.animOffset) % anim.length);
     gl.bindBuffer(gl.ARRAY_BUFFER, anim[index]);
     gl.enableVertexAttribArray(voxelColorAttrLoc);
     gl.vertexAttribPointer(voxelColorAttrLoc, 4, gl.FLOAT, false, 0, 0);

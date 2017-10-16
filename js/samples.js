@@ -69,6 +69,7 @@
     'js/samples/parrot_particle_util.js',
 
     // animations
+    'js/anim/speed.js',
     'js/anim/parrot_anim.js',
     'js/anim/lptm_anim.js',
     'js/anim/chainerparrot_anim.js',

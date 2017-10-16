@@ -8,20 +8,28 @@ function parrotParticleTicker(begin, str, options = {}) {
     position: [40, 0, -20],
     rotation: [0, 0, 0],
     parrotSize: 3.0,
+    fly: Infinity, // time(age) to fly
+    flySpeed: 10,
 
     ...options
   };
+
+  const animations = Array.isArray(params.anim) ?
+    params.anim :
+    _.range(str.length).map(() => params.anim);
 
   const velocity = params.velocity * params.parrotSize * 8; // character numbers to unit
   const orgParrotSize = 32;
   const parrotScale = params.parrotSize / orgParrotSize;
   const generationCycle = params.parrotSize / velocity;
   const totalColumns = 8 * str.length;
+  let age = 0;
+  let bornTime = 0;
   let lastTime = -1;
   let accumTime = 0;
   let currentIndex = 0;
 
-  function generateParrot(x, y) {
+  function generateParrot(x, y, anim) {
     const fadeTime = 1.0;
     const walkTime = params.parrotLifeTime - fadeTime * 2;
     const lifeTime = params.particleLifeTime;
@@ -41,9 +49,21 @@ function parrotParticleTicker(begin, str, options = {}) {
     const to = vec3.create();
     vec3.transformMat4(to, toLocal, model);
 
+    let flyFn;
+    if (age + lifeTime >= params.fly) {
+      const flyTime = params.fly + Math.cos(age + currentIndex + y) * 2;
+      flyFn = function flyer(particle, time) {
+        const localTime = time - bornTime;
+        if (localTime > flyTime) {
+          particle.modelTranslation[1] += (localTime - flyTime) * params.flySpeed;
+        }
+      }
+    }
+
     return {
       lifeTime: lifeTime,
-      anim: params.anim,
+      anim: anim,
+      eval: flyFn,
       animOffset: totalColumns - currentIndex,
       properties: [
         {
@@ -82,13 +102,14 @@ function parrotParticleTicker(begin, str, options = {}) {
   }
 
   function generateColumn(offset) {
-    const code = str.charCodeAt(Math.floor(currentIndex / 8));
+    const charPos = Math.floor(currentIndex / 8);
+    const code = str.charCodeAt(charPos);
     const basePos = 8 * code;
     const result = [];
     const x = currentIndex % 8;
     for (let i = 0; i < 8; i++) {
       if (window.font8x8[basePos + i] & (1 << (7 - x))) {
-        result.push(generateParrot(offset, 4 - i));
+        result.push(generateParrot(offset, 4 - i, animations[charPos]));
       }
     }
 
@@ -100,10 +121,12 @@ function parrotParticleTicker(begin, str, options = {}) {
   function eval(time) {
     let result = [];
     if (lastTime < 0) {
+      bornTime = time;
       result.push(...generateColumn(0));
     } else {
       const diffTime = time - lastTime;
       accumTime += diffTime;
+      age += diffTime;
       const generateCount = Math.floor(accumTime / generationCycle);
 
       for (let i = 0; i < generateCount; i++) {

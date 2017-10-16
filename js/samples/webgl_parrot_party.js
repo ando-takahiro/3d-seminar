@@ -119,22 +119,54 @@
     const bitmap = [
       ['parrot', null],
       ['sirocco', 'loveparrot'],
+      ['fastparrot', 'fasterparrot'],
+      ['fastestparrot', 'parrot'],
     ];
+
+    const message = [
+      // {str: 'More speed...  ', anim: 'parrot'},
+      {str: 'Fast!  ', anim: 'fastparrot'},
+      {str: 'Faster!!  ', anim: 'fasterparrot'},
+      {str: 'Fastest!!!  ', anim: 'fastestparrot'},
+    ].reduce((ret, val) => {
+      ret.str += val.str;
+      ret.anim.push(..._.range(val.str.length).map(() => val.anim));
+      return ret;
+    }, {str: '', anim: []})
 
     const lookDown = quat.create();
     quat.rotateX(lookDown, lookDown, -Math.PI * 0.2);
     const lookRight = quat.create();
     quat.rotateY(lookRight, lookRight, Math.PI * 0.4);
-    const rotRight = quat.create();
-    quat.rotateZ(rotRight, rotRight, Math.PI * 0.4);
+    const lookRight2 = quat.create();
+    quat.rotateY(lookRight2, lookRight2, Math.PI * 0.2);
     const q1 = quat.create();
-    quat.mul(q1, lookDown, lookDown);
-    // quat.mul(q1, rotRight, lookDown);
+    const lookUp = quat.create();
+    quat.rotateX(lookUp, lookUp, Math.PI * 0.3);
     quat.mul(q1, lookRight, lookDown);
+    const q2 = quat.create();
+    quat.mul(q2, q1, lookUp);
     return [
-      parrotParticleTicker(0.0, 'More speed... Fast! Faster!! FASTEST!!!', {
-        position: [0, -20, 50],
+      parrotParticleTicker(1.5, message.str, {
+        position: [-50, -20, 0],
         rotation: [-Math.PI * 0.5, 0, Math.PI * 0.5],
+        anim: message.anim,
+        velocity: 2,
+        fly: 12,
+      }),
+      parrotParticleTicker(1.75, message.str, {
+        position: [-25, -20, 0],
+        rotation: [-Math.PI * 0.5, 0, Math.PI * 0.5],
+        anim: message.anim,
+        velocity: 2,
+        fly: 12,
+      }),
+      parrotParticleTicker(2.0, message.str, {
+        position: [0, -20, 0],
+        rotation: [-Math.PI * 0.5, 0, Math.PI * 0.5],
+        anim: message.anim,
+        velocity: 2,
+        fly: 12,
       }),
       parrotParticleSpawner(0, parrotParticleBitmap(bitmap)),
       parrotParticleSpawner(0, [
@@ -146,6 +178,9 @@
               {time: 1, value: [0, 0, 0, 1]},
               // {time: 3, value: lookDown},
               {time: 3, value: q1},
+              {time: 13, value: q1},
+               {time: 14, value: q2},
+              // {time: 14, value: q3},
             ],
           },
           {
@@ -153,8 +188,10 @@
             keyFrames: [
               {time: 0, value: center},
               // {time: 3, value: [null, null, 130]},
-              {time: 3, value: [40, 20, 130]},
-              {time: 14, value: [null, null, 240], transition: 'linear'},
+              {time: 3, value: [50, 30, 90], transition: 'easeOutCubic'},
+              {time: 14, value: [null, null, 40], transition: 'linear'},
+             //  {time: 10, value: [50, 30, 10], transition: 'easeOutCubic'},
+             //  {time: 14, value: [40, null, -30], transition: 'linear'},
             ],
           }
         ]),

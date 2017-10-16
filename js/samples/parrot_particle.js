@@ -193,7 +193,8 @@ void main(void) {
       end: scene.time + definition.lifeTime,
       cameraTranslation: [0, 0, 0],
       cameraRotation: [0, 0, 0],
-      properties: definition.properties.map(interpolateKeyFrames)
+      properties: definition.properties.map(interpolateKeyFrames),
+      eval: definition.eval,
     };
 
     if (common.type === 'SceneModifier') {
@@ -243,6 +244,7 @@ void main(void) {
 
   function updateParticle(p) { // p is particle, this function updates p
     const age = scene.time - p.begin;
+
     p.properties.forEach(prop => {
       const pair = findKeyFramePair(prop.keyFrames, age);
       const dest = p[prop.name];
@@ -266,6 +268,10 @@ void main(void) {
         }
       }
     });
+
+    if (p.eval) {
+      p.eval(p, scene.time);
+    }
 
     if (p.type === 'SceneModifier') {
       modifyScene(p);
@@ -304,7 +310,8 @@ void main(void) {
     gl.uniform3fv(uniformVoxelScale, particle.voxelScale);
 
     const anim = animations[particle.anim];
-    const index = Math.floor((scene.time * 7 + particle.animOffset) % anim.length);
+    const animSpeed = window.animSpeed[particle.anim] || 7;
+    const index = Math.floor((scene.time * animSpeed + particle.animOffset) % anim.length);
     gl.bindBuffer(gl.ARRAY_BUFFER, anim[index]);
     gl.enableVertexAttribArray(voxelColorAttrLoc);
     gl.vertexAttribPointer(voxelColorAttrLoc, 4, gl.FLOAT, false, 0, 0);

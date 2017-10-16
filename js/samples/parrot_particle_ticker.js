@@ -9,7 +9,7 @@ function parrotParticleTicker(begin, str, options = {}) {
     rotation: [0, 0, 0],
     parrotSize: 3.0,
     fly: Infinity, // time(age) to fly
-    flySpeed: 10,
+    flySpeed: 30,
 
     ...options
   };

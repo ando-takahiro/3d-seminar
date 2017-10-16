@@ -67,6 +67,7 @@
     "js/samples/parrot_particle_cut.js",
     'js/samples/parrot_particle_bitmap.js',
     'js/samples/parrot_particle_util.js',
+    'js/samples/parrot_party_bitmap.js',
 
     // animations
     'js/anim/speed.js',
@@ -74,7 +75,6 @@
     'js/anim/lptm_anim.js',
     'js/anim/chainerparrot_anim.js',
     'js/anim/confusedparrot_anim.js',
-    'js/anim/dangerparrot_anim.js',
     'js/anim/dealwithparrot_anim.js',
     'js/anim/fasterparrot_anim.js',
     'js/anim/fastestparrot_anim.js',

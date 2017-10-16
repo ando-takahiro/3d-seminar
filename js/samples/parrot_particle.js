@@ -155,7 +155,7 @@ void main(void) {
     const fovy = 0.5;
     const aspect = gl.canvas.width / gl.canvas.height;
     const near = 0.001;
-    const far = 1000;
+    const far = 10000;
     mat4.perspective(projection, fovy, aspect, near, far);
     const uniformProjection = gl.getUniformLocation(program, "projection");
     gl.uniformMatrix4fv(uniformProjection, false, projection);

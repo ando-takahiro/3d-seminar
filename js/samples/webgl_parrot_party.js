@@ -6,18 +6,21 @@
         introCharacter('lptm', -16),
       ]),
       parrotParticleSpawner(5.0, [
-        introCharacter('parrot', -8, -8),
-        introCharacter('lptm', 20, -20),
+        introCharacter('dealwithparrot', -20, -28, -10),
+        introCharacter('stableparrot', 20, -20, 10),
       ]),
-      parrotParticleSpawner(6.0, [
-        introCharacter('parrot', 10, -5),
-        introCharacter('lptm', -30, -200),
+      parrotParticleSpawner(7.0, [
+        introCharacter('parrotdad', 50, -35, 20),
+        introCharacter('loveparrot', -80, -200, 60),
+        introCharacter('chainerparrot', 100, 200, 15),
       ]),
-      parrotParticleTicker(0.0, 'PARTY OR DIE'),
+      parrotParticleTicker(0.0, 'PARTY OR DIE', {
+        particleLifeTime: 40,
+      }),
     ];
   }
 
-  function cut2() {
+  function randomGenerateHelper(num, coreFn) {
     const excludeAnims = [
       'gpuconcernedparrot',
       'parrotdad',
@@ -27,15 +30,21 @@
     ];
     const animNames = Object.keys(window.anims).
       filter(name => excludeAnims.indexOf(name) < 0);
-    const center = [0, 0, 100];
-    const particles = [];
 
-    for (let i = 0; i < 100; i++) {
+    return _.range(num).map(i => coreFn(i, animNames));
+  }
+
+  function cut2() {
+    const center = [0, 0, 100];
+    const rotCycle = 13.5;
+
+    function generateCore(i, animNames) {
+
       // for reproductivity, we avoid random.
       // so let's use cos + offset(salt) instead of random.
-      const radius = 100 * Math.cos(i + 3) + 300;
+      const radius = 100 * Math.cos(i + 3) + 400;
       const yRadian = Math.cos(i + 1) * 10;
-      const xRadian = Math.cos(i + 4) * 40 % (Math.PI * 0.25);
+      const xRadian = Math.cos(i + 4) * 40 % (Math.PI * 0.125);
       const pos = [
         Math.cos(yRadian) * Math.cos(xRadian) * radius + center[0], 
         Math.sin(xRadian) * radius + center[1],
@@ -43,18 +52,21 @@
       ];
 
       const scale = 1.0;
-
-      particles.push({
-        lifeTime: 15.0,
+      const lifeTime = rotCycle * 2;
+      return {
+        lifeTime: lifeTime,
         anim: animNames[i % animNames.length],
         properties: [
           {
             name: 'modelTranslation',
             keyFrames: [
-              {time:  0, value: pos},
-              {time:  5, value: [null, pos[1] + 10 * Math.cos(i + 11)]},
-              {time: 10, value: [null, pos[1] + 10 * Math.cos(i + 11)]},
-              {time: 15, value: pos},
+              {time: 0, value: pos},
+              {time: lifeTime * 0.2, value: [null, pos[1] + 10 * Math.cos(i + 11)]},
+              {time: lifeTime * 0.4, value: [null, pos[1] + 10 * Math.cos(i + 11)]},
+              {time: lifeTime * 0.5, value: pos},
+              {time: lifeTime * 0.6, value: [null, pos[1] + 10 * Math.cos(i + 11)]},
+              {time: lifeTime * 0.8, value: [null, pos[1] + 10 * Math.cos(i + 11)]},
+              {time: lifeTime, value: pos},
             ]
           },
           {
@@ -74,8 +86,11 @@
             keyFrames: [
               {time: 0, value: [100]},
               {time: 3, value: [1], transition: 'easeOutCubic'},
-              {time: 12, value: null},
-              {time: 15, value: [100], transition: 'easeInCubic'},
+              {time: rotCycle - 3, value: null},
+              {time: rotCycle, value: [100], transition: 'easeInCubic'},
+              {time: rotCycle + 3, value: [1], transition: 'easeOutCubic'},
+              {time: 2 * rotCycle - 3, value: null},
+              {time: 2 * rotCycle, value: [100], transition: 'easeInCubic'},
             ]
           },
           {
@@ -83,46 +98,105 @@
             keyFrames: [
               {time: 0, value: [100, 200]},
               {time: 3, value: [0, 0], transition: 'easeOutCubic'},
-              {time: 12, value: null},
-              {time: 15, value: [100], transition: 'easeInCubic'},
+              {time: rotCycle - 3, value: null},
+              {time: rotCycle, value: [100], transition: 'easeInCubic'},
+              {time: rotCycle + 3, value: [0, 0], transition: 'easeOutCubic'},
+              {time: 2 * rotCycle - 3, value: null},
+              {time: 2 * rotCycle, value: [100], transition: 'easeInCubic'},
             ]
           }
         ]
-      });
+      };
     }
+
+    const camRotQuat = quat.create();
+    quat.rotateY(camRotQuat, camRotQuat, Math.PI * 0.25);
+    const q1 = quat.create();
+    quat.mul(q1, camRotQuat, camRotQuat);
+    const q2 = quat.create();
+    quat.mul(q2, q1, camRotQuat);
+    const q3 = quat.create();
+    quat.mul(q3, q2, camRotQuat);
+    const q4 = quat.create();
+    quat.mul(q4, q3, camRotQuat);
+    const q5 = quat.create();
+    quat.mul(q5, q4, camRotQuat);
+    const q6 = quat.create();
+    quat.mul(q6, q5, camRotQuat);
+    const q7 = quat.create();
+    quat.mul(q7, q6, camRotQuat);
+
+    camCycle = rotCycle - 1.5;
+    const gpuString = 'GPU! GPU! GPU! GPU! GPU! GPU! GPU! GPU!';
+    const camMove = [...center];
+    camMove[1] += 100;
+    const camMove2 = [...center];
+    camMove2[1] += -100;
 
     return [
       parrotParticleSpawner(0, [
-        parrotParticleCamera(15.0, [
+        parrotParticleCamera(camCycle * 2, [
           {
             name: 'cameraRotation',
             keyFrames: [
-              {time: 0, value: [0, 0]},
-              {time: 15, value: [0, -4 * Math.PI]},
+              {time: 0, value: [0, 0, 0, 1]},
+              {time: camCycle * 0.25, value: camRotQuat},
+              {time: camCycle * 0.5, value: q1},
+              {time: camCycle * 0.75, value: q2},
+              {time: camCycle * 1.0, value: q3},
+              {time: camCycle * 1.25, value: q4},
+              {time: camCycle * 1.5, value: q5},
+              {time: camCycle * 1.75, value: q6},
+              {time: camCycle * 2.0, value: q7},
             ],
           },
           {
             name: 'cameraTranslation',
             keyFrames: [
               {time: 0, value: center},
+              {time: camCycle * 0.5, value: center},
+              {time: camCycle * 1.0, value: camMove},
+              {time: camCycle * 1.5, value: camMove2},
+              {time: camCycle * 2, value: center},
             ],
           }
         ]),
-        ...particles
+        ...randomGenerateHelper(100, generateCore)
       ]),
-      parrotParticleTicker(0.0, 'GPU! GPU! GPU! GPU!'),
+      parrotParticleTicker(0.0, gpuString, {
+        position: [80, 40, -50],
+        anim: 'gpuconcernedparrot',
+        particleLifetime: rotCycle * 2,
+        velocity: 8,
+      }),
+      parrotParticleTicker(0.0, gpuString, {
+        position: [80, 0, 30],
+        anim: 'gpuconcernedparrot',
+        particleLifetime: rotCycle * 2,
+        velocity: 4,
+      }),
+      parrotParticleTicker(0.0, gpuString, {
+        position: [100, -20, -20],
+        anim: 'gpuconcernedparrot',
+        particleLifetime: rotCycle * 2,
+        velocity: 8,
+      }),
+      parrotParticleTicker(0.0, gpuString, {
+        position: [120, 80, -10],
+        anim: 'gpuconcernedparrot',
+        particleLifetime: rotCycle * 2,
+        velocity: 8,
+      }),
+      parrotParticleTicker(0.0, gpuString, {
+        position: [100, -80, -80],
+        anim: 'gpuconcernedparrot',
+        particleLifetime: rotCycle * 2,
+        velocity: 8,
+      }),
     ];
   }
 
   function cut3() {
-    const center = [0, 0, 100];
-    const bitmap = [
-      ['parrot', null],
-      ['sirocco', 'loveparrot'],
-      ['fastparrot', 'fasterparrot'],
-      ['fastestparrot', 'parrot'],
-    ];
-
     const message = [
       // {str: 'More speed...  ', anim: 'parrot'},
       {str: 'Fast!  ', anim: 'fastparrot'},
@@ -138,14 +212,61 @@
     quat.rotateX(lookDown, lookDown, -Math.PI * 0.2);
     const lookRight = quat.create();
     quat.rotateY(lookRight, lookRight, Math.PI * 0.4);
-    const lookRight2 = quat.create();
-    quat.rotateY(lookRight2, lookRight2, Math.PI * 0.2);
     const q1 = quat.create();
     const lookUp = quat.create();
     quat.rotateX(lookUp, lookUp, Math.PI * 0.3);
     quat.mul(q1, lookRight, lookDown);
     const q2 = quat.create();
     quat.mul(q2, q1, lookUp);
+
+    const justifyRotZ = quat.create();
+    quat.rotateZ(justifyRotZ, justifyRotZ, -Math.PI * 0.1);
+
+    const q3 = quat.create();
+    quat.mul(q3, q2, lookUp);
+    quat.mul(q3, q3, justifyRotZ);
+
+    function generateCore(i, animNames) {
+      const center = [250, 300, 200];
+
+      // for reproductivity, we avoid random.
+      // so let's use cos + offset(salt) instead of random.
+      const radius = 100 * Math.cos(i + 3) + 200;
+      const yRadian = Math.cos(i + 1) * 10;
+      const pos = [
+        Math.cos(yRadian) * radius + center[0], 
+        center[1] + 50 * Math.cos(i + 8),
+        Math.sin(yRadian) * radius + center[2], 
+      ];
+
+      const scale = 0.125;
+      return {
+        lifeTime: Infinity,
+        anim: animNames[i % animNames.length],
+        properties: [
+          {
+            name: 'modelTranslation',
+            keyFrames: [
+              {time:  0, value: pos},
+              {time: 15, value: [null, pos[1] + 80 * Math.abs(Math.cos(i + 11)) + 20]}
+            ]
+          },
+          {
+            name: 'modelRotation',
+            keyFrames: [
+              {time: 0, value: [-Math.PI * 0.5, 0, -Math.PI * 0.5]},
+            ]
+          },
+          {
+            name: 'modelScale',
+            keyFrames: [
+              {time: 0, value: [scale, scale, scale]},
+            ]
+          },
+        ]
+      };
+    }
+
     return [
       parrotParticleTicker(1.5, message.str, {
         position: [-50, -20, 0],
@@ -153,6 +274,7 @@
         anim: message.anim,
         velocity: 2,
         fly: 12,
+        particleLifetime: 30,
       }),
       parrotParticleTicker(1.75, message.str, {
         position: [-25, -20, 0],
@@ -168,9 +290,8 @@
         velocity: 2,
         fly: 12,
       }),
-      parrotParticleSpawner(0, parrotParticleBitmap(bitmap)),
       parrotParticleSpawner(0, [
-        parrotParticleCamera(15.0, [
+        parrotParticleCamera(30, [
           {
             name: 'cameraRotation',
             keyFrames: [
@@ -179,14 +300,15 @@
               // {time: 3, value: lookDown},
               {time: 3, value: q1},
               {time: 13, value: q1},
-               {time: 14, value: q2},
+              {time: 14, value: q2},
+              {time: 20, value: q3},
               // {time: 14, value: q3},
             ],
           },
           {
             name: 'cameraTranslation',
             keyFrames: [
-              {time: 0, value: center},
+              {time: 0, value: [0, 0, 100]},
               // {time: 3, value: [null, null, 130]},
               {time: 3, value: [50, 30, 90], transition: 'easeOutCubic'},
               {time: 14, value: [null, null, 40], transition: 'linear'},
@@ -196,7 +318,31 @@
           }
         ]),
       ]),
-      parrotParticleTicker(0.0, 'GPU! GPU! GPU! GPU!'),
+      parrotParticleSpawner(13, [
+        ...parrotParticleBitmap(window.parrotPartyBitmap, {
+          position: [0, 50, 0],
+          velocity: [0, -5, -30],
+          lifeTime: Infinity,
+          motionEnd: 10,
+          rotation: [Math.PI * 0.5, 0, -Math.PI * 0.5],
+        }),
+      ]),
+      parrotParticleTicker(13, 'Fastest!!!', {
+        position: [50, 30, -30],
+        rotation: [-Math.PI * 0.5, 0, Math.PI * 0.5],
+        anim: 'fastestparrot',
+        velocity: 2,
+        fly: 0,
+        particleLifetime: 30,
+      }),
+      parrotParticleTicker(13, 'Fastest!!!', {
+        position: [-30, 30, -40],
+        rotation: [-Math.PI * 0.5, 0, Math.PI * 0.5],
+        anim: 'fastestparrot',
+        velocity: 2,
+        fly: 0,
+        particleLifetime: 30,
+      }),
     ];
   }
 
@@ -204,11 +350,11 @@
     const sequence = [];
     let t = 0;
 
-    // sequence.push(...parrotParticleCut(t, cut1());
-    // t += 13;
+    sequence.push(...parrotParticleCut(t, cut1()));
+    t += 15;
 
-    // sequence.push(...parrotParticleCut(t, cut2()));
-    // t += 15;
+    sequence.push(...parrotParticleCut(t, cut2()));
+    t += 24;
 
     sequence.push(...parrotParticleCut(t, cut3()));
     t += 30;

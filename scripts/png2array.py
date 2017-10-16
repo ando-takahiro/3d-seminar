@@ -10,7 +10,7 @@ parser.add_argument('--input_directory', '-i', default='./images',
                     help='animation name')
 args = parser.parse_args()
 
-input_files = glob(path.join(args.input_directory, '%s-*.png' % args.name))
+input_files = glob(path.join(args.input_directory, '%s*.png' % args.name))
 
 print('anims = window.anims || {};')
 print('anims.%s = [' % args.name)

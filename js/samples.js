@@ -61,6 +61,8 @@
     "js/samples/parrot_particle_spawner.js",
     "js/samples/parrot_particle_intro.js",
     "js/samples/parrot_particle_ticker.js",
+    "js/samples/parrot_particle_camera.js",
+    "js/samples/parrot_particle_cut.js",
 
     // TODO: move anims
     "js/parrot_anim.js",

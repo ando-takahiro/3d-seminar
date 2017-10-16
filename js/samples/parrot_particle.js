@@ -1,4 +1,31 @@
 // Let's think parrots as particles
+
+function makeModelMatrix(translation, rotation, scale) {
+  const model = mat4.create();
+
+  if (translation) {
+    mat4.translate(model, model, translation);
+  }
+  if (rotation) {
+    mat4.rotateX(model, model, rotation[0]);
+    mat4.rotateY(model, model, rotation[1]);
+    mat4.rotateZ(model, model, rotation[2]);
+  }
+  if (scale) {
+    mat4.scale(model, model, scale);
+  }
+
+  return model;
+}
+
+function makeViewMatrix(translation, rotation, scale) {
+  const view = makeModelMatrix(translation, rotation, scale);
+
+  mat4.invert(view, view);
+
+  return view;
+}
+
 function parrotParticle(sequenceFn, loop, audioId) {
 
   const animList = [
@@ -83,22 +110,22 @@ void main(void) {
     voxels.push(i % resolution - resolution / 2, Math.floor(i / resolution) - resolution / 2);
   }
 
-  const view = mat4.create();
-  let uniformView, uniformModel, uniformVoxelRotation;
   let ext;
-  let time;
-  let waitingGenerators;
-  let particles, particleGenerators;
-  let lastTimestamp;
-  let animations = {}, voxelColorAttrLoc;
+  let uniformView, uniformModel, uniformVoxelRotation, voxelColorAttrLoc; 
+  let scene;
+  let waitingGenerators, particles, particleGenerators;
+  let animations = {};
 
   function start(gl) {
     ext = gl.getExtension('ANGLE_instanced_arrays');
-    time = 0;
+    scene = {
+      time: 0,
+      lastTimestamp: 0,
+      view: makeViewMatrix([0, 0, 100])
+    };
     particles = [];
     particleGenerators = [];
-    waitingGenerators = [...sequenceFn()];
-    lastTimestamp = 0.0;
+    waitingGenerators = sequenceFn();
 
     // start audio
     if (audio) {
@@ -151,13 +178,8 @@ void main(void) {
       return ret;
     }, {});
 
-    mat4.fromTranslation(view, [0.0, 0.0, 100]);
-    // Actually, moving camera is
-    // done by moving entire world!
-    // `invert` does this.
-    mat4.invert(view, view); 
     uniformView = gl.getUniformLocation(program, "view");
-    gl.uniformMatrix4fv(uniformView, false, view);
+    gl.uniformMatrix4fv(uniformView, false, scene.view);
 
     uniformModel = gl.getUniformLocation(program, "model");
 
@@ -196,19 +218,36 @@ void main(void) {
   }
 
   function spawnParticle(definition) {
-    return {
+    const common = {
+      type: definition.type || 'Particle',
       definition: definition,
-      begin: time,
-      end: time + definition.lifeTime,
-      anim: definition.anim,
-      animOffset: definition.animOffset || 0,
-      modelTranslation: [0, 0, 0],
-      modelRotation: [0, 0, 0],
-      modelScale: [1, 1, 1],
-      voxelScale: [1, 1, 1],
-      voxelRotation: [0, 0, 0],
+      begin: scene.time,
+      end: scene.time + definition.lifeTime,
+      cameraTranslation: [0, 0, 0],
+      cameraRotation: [0, 0, 0],
       properties: definition.properties.map(interpolateKeyFrames)
     };
+
+    if (common.type === 'SceneModifier') {
+      return {
+        ...common,
+
+        cameraTranslation: [0, 0, 0],
+        cameraRotation: [0, 0, 0],
+      };
+    } else {
+      return {
+        ...common,
+
+        anim: definition.anim,
+        animOffset: definition.animOffset || 0,
+        modelTranslation: [0, 0, 0],
+        modelRotation: [0, 0, 0],
+        modelScale: [1, 1, 1],
+        voxelScale: [1, 1, 1],
+        voxelRotation: [0, 0, 0],
+      };
+    }
   }
 
   // keyFrames should be sorted by time
@@ -230,8 +269,12 @@ void main(void) {
     }
   }
 
+  function modifyScene(modifier) {
+    scene.view = makeViewMatrix(modifier.cameraTranslation, modifier.cameraRotation);
+  }
+
   function updateParticle(p) { // p is particle, this function updates p
-    const age = time - p.begin;
+    const age = scene.time - p.begin;
     p.properties.forEach(prop => {
       const pair = findKeyFramePair(prop.keyFrames, age);
       const dest = p[prop.name];
@@ -255,48 +298,45 @@ void main(void) {
         }
       }
     });
+
+    if (p.type === 'SceneModifier') {
+      modifyScene(p);
+    }
   }
 
   function sequencer() {
     // activate generators
-    particleGenerators.push(...waitingGenerators.filter(gen => gen.begin <= time));
-    waitingGenerators = waitingGenerators.filter(gen => gen.begin > time);
+    particleGenerators.push(...waitingGenerators.filter(gen => gen.begin <= scene.time));
+    waitingGenerators = waitingGenerators.filter(gen => gen.begin > scene.time);
 
     // do generate
     particleGenerators.forEach(
-      gen => particles.push(...gen.eval(time).map(spawnParticle))
+      gen => particles.push(...gen.eval(scene.time).map(spawnParticle))
     ); 
     // GC generators
-    particleGenerators = particleGenerators.filter(gen => time < gen.end);
+    particleGenerators = particleGenerators.filter(gen => scene.time < gen.end);
 
     // update particles
     particles.forEach(updateParticle);
 
     // GC particles
-    particles = particles.filter(p => p.end >= time);
+    particles = particles.filter(p => p.end >= scene.time);
 
     if (loop && waitingGenerators.length <= 0 && particles.length <= 0 && particleGenerators.length <= 0) {
-      time = 0;
-      waitingGenerators = [...sequenceFn()];
+      scene.time = 0;
+      waitingGenerators = sequenceFn();
     }
   }
 
   function renderParticle(gl, particle) {
-    const model = mat4.create();
-
-    mat4.identity(model);
-    mat4.translate(model, model, particle.modelTranslation);
-    mat4.rotateX(model, model, particle.modelRotation[0]);
-    mat4.rotateY(model, model, particle.modelRotation[1]);
-    mat4.rotateZ(model, model, particle.modelRotation[2]);
-    mat4.scale(model, model, particle.modelScale);
+    const model = makeModelMatrix(particle.modelTranslation, particle.modelRotation, particle.modelScale);
     gl.uniformMatrix4fv(uniformModel, false, model);
 
     gl.uniform3fv(uniformVoxelRotation, particle.voxelRotation);
     gl.uniform3fv(uniformVoxelScale, particle.voxelScale);
 
     const anim = animations[particle.anim];
-    const index = Math.floor((time * anim.length + particle.animOffset) % anim.length);
+    const index = Math.floor((scene.time * anim.length + particle.animOffset) % anim.length);
     gl.bindBuffer(gl.ARRAY_BUFFER, anim[index]);
     gl.enableVertexAttribArray(voxelColorAttrLoc);
     gl.vertexAttribPointer(voxelColorAttrLoc, 4, gl.FLOAT, false, 0, 0);
@@ -305,17 +345,21 @@ void main(void) {
   }
 
   function update(gl, timestamp) {
-    if (lastTimestamp <= 0) {
-      lastTimestamp = timestamp;
+    if (scene.lastTimestamp <= 0) {
+      scene.lastTimestamp = timestamp;
     }
 
-    const deltaTime = (timestamp - lastTimestamp) * 0.001;
-    time += deltaTime;
-    lastTimestamp = timestamp;
+    const deltaTime = (timestamp - scene.lastTimestamp) * 0.001;
+    scene.time += deltaTime;
+    scene.lastTimestamp = timestamp;
 
     sequencer();
 
-    particles.forEach(p => renderParticle(gl, p));
+    gl.uniformMatrix4fv(uniformView, false, scene.view);
+
+    particles
+      .filter(p => p.type === 'Particle')
+      .forEach(p => renderParticle(gl, p));
   }
 
   function end() {

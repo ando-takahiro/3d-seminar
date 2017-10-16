@@ -1,6 +1,6 @@
 anims = window.anims || {};
-anims.sirrocco = [
-// /tmp/tmpngg789to/sirrocco-0.png
+anims.sirocco = [
+// /tmp/tmpngg789to/sirocco-0.png
 [
 0.000000, 0.000000, 0.000000, 0.000000,
 0.000000, 0.000000, 0.000000, 0.000000,

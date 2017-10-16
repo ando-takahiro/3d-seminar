@@ -18,8 +18,15 @@
   }
 
   function cut2() {
+    const excludeAnims = [
+      'gpuconcernedparrot',
+      'parrotdad',
+      'fastparrot',
+      'fasterparrot',
+      'fastestparrot',
+    ];
     const animNames = Object.keys(window.anims).
-      filter(name => name !== 'gpuconcernedparrot' && name !== 'parrotdad');
+      filter(name => excludeAnims.indexOf(name) < 0);
     const center = [0, 0, 100];
     const particles = [];
 
@@ -108,8 +115,14 @@
   }
 
   function cut3() {
+    const bitmap = [
+      ['parrot', null],
+      ['sirocco', 'loveparrot'],
+    ];
+
     return [
       parrotParticleTicker(0.0, 'More speed... Fast! Faster!! FASTEST!!!'),
+      parrotParticleSpawner(0, parrotParticleBitmap(bitmap))
     ];
   }
 
@@ -120,8 +133,8 @@
     // sequence.push(...parrotParticleCut(t, cut1());
     // t += 13;
 
-    sequence.push(...parrotParticleCut(t, cut2()));
-    t += 15;
+    // sequence.push(...parrotParticleCut(t, cut2()));
+    // t += 15;
 
     sequence.push(...parrotParticleCut(t, cut3()));
     t += 30;

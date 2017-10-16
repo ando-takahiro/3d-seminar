@@ -65,6 +65,7 @@
     "js/samples/parrot_particle_ticker.js",
     "js/samples/parrot_particle_camera.js",
     "js/samples/parrot_particle_cut.js",
+    'js/samples/parrot_particle_bitmap.js',
 
     // animations
     'js/anim/parrot_anim.js',
@@ -83,7 +84,7 @@
     'js/anim/party_parrot_anim.js',
     'js/anim/poyoparrot_anim.js',
     'js/anim/scienceparrot_anim.js',
-    'js/anim/sirrocco_anim.js',
+    'js/anim/sirocco_anim.js',
     'js/anim/sleepyparrot_anim.js',
     'js/anim/stableparrot_anim.js',
     'js/anim/thumbsupparrot_anim.js',

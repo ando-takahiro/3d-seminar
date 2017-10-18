@@ -2,24 +2,24 @@
   // based on this tutorial:
   // https://github.com/bjacob/webgl-tutorial/blob/master/01-red-triangle.html
 
-  const vertexShaderString = 
-  'attribute vec3 vertexPosition;  \n\
-   uniform mat4 model;             \n\
-   uniform mat4 projection;        \n\
-   uniform mat4 view;              \n\
-   void main(void) {               \n\
-     gl_Position = projection *    \n\
-       view *                      \n\
-       model *                     \n\
-       vec4(vertexPosition, 1.);   \n\
-   }                               \n';
+  const vertexShaderString = `
+attribute vec3 vertexPosition;
+uniform mat4 model;
+uniform mat4 projection;
+uniform mat4 view;
+void main(void) {
+  gl_Position = projection *
+    view *
+    model *
+    vec4(vertexPosition, 1.);
+}`;
 
-  const fragmentShaderString =
-  'precision mediump float;                   \n\
-   void main(void) {                          \n\
-     vec2 p = abs(sin(gl_FragCoord.xy / 32.0));\n\
-     gl_FragColor = vec4(p.x, p.y, p.x * (1.0-p.y), 1.0);\n\
-   }                                          \n';
+  const fragmentShaderString = `
+precision mediump float;
+void main(void) {
+  vec2 p = abs(sin(gl_FragCoord.xy / 32.0));
+  gl_FragColor = vec4(p.x, p.y, p.x * (1.0-p.y), 1.0);
+}`;
 
   const vertices = [
     -1,-1,-1,  1,-1,-1,  1, 1,-1, -1, 1,-1,
@@ -82,9 +82,9 @@
 
     const projection = mat4.create();
     const fovy = 0.5;
-    const aspect = gl.canvas.width / gl.canvas.height;
-    const near = 0.000001;
-    const far = 100000;
+    const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+    const near = 0.001;
+    const far = 1000;
     mat4.perspective(projection, fovy, aspect, near, far);
     const uniformProjection = gl.getUniformLocation(program, "projection");
     gl.uniformMatrix4fv(uniformProjection, false, projection);
@@ -92,7 +92,6 @@
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Int16Array(indices), gl.STATIC_DRAW);
     gl.vertexAttribPointer(vertexPositionAttrLoc, 3, gl.FLOAT, false, 0, 0);
-    gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
   }
 
   function update(gl) {

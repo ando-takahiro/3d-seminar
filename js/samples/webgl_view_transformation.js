@@ -69,9 +69,9 @@
 
     const projection = mat4.create();
     const fovy = 0.5;
-    const aspect = gl.canvas.width / gl.canvas.height;
-    const near = 0.000001;
-    const far = 100000;
+    const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+    const near = 0.0001;
+    const far = 1000;
     mat4.perspective(projection, fovy, aspect, near, far);
     const uniformProjection = gl.getUniformLocation(program, "projection");
     gl.uniformMatrix4fv(uniformProjection, false, projection);

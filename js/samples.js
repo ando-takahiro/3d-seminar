@@ -67,6 +67,8 @@
     "js/samples/parrot_particle_cut.js",
     'js/samples/parrot_particle_bitmap.js',
     'js/samples/parrot_particle_util.js',
+
+    // that bitmap
     'js/samples/parrot_party_bitmap.js',
 
     // animations

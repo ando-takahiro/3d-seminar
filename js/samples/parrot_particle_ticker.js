@@ -49,6 +49,40 @@ function parrotParticleTicker(begin, str, options = {}) {
     const to = vec3.create();
     vec3.transformMat4(to, toLocal, model);
 
+    const properties = [
+      {
+        name: 'modelTranslation',
+        keyFrames: [
+          {time: 0, value: from},
+          {time: lifeTime, value: to, transition: 'linear'},
+        ]
+      },
+      {
+        name: 'modelRotation',
+        keyFrames: [
+          {time: 0, value: params.rotation},
+        ]
+      },
+      {
+        name: 'modelScale',
+        keyFrames: [
+          {time: 0, value: [0, 0, 0]},
+          {time: fadeTime, value: [parrotScale, parrotScale, parrotScale], transition: 'easeOutElastic'},
+          {time: lifeTime - fadeTime, value: null},
+          {time: lifeTime, value: [0, 0, 0], transition: 'easeInElastic'},
+        ]
+      },
+      {
+        name: 'voxelRotation',
+        keyFrames: [
+          {time: 0, value: [2, 4]},
+          {time: fadeTime, value: [0, 0]},
+          {time: lifeTime - fadeTime, value: null},
+          {time: lifeTime, value: [-2, -4]},
+        ]
+      },
+    ];
+
     let flyFn;
     if (age + lifeTime >= params.fly) {
       const flyTime = params.fly + Math.cos(age + currentIndex + y) * 2;
@@ -65,39 +99,7 @@ function parrotParticleTicker(begin, str, options = {}) {
       anim: anim,
       eval: flyFn,
       animOffset: totalColumns - currentIndex,
-      properties: [
-        {
-          name: 'modelTranslation',
-          keyFrames: [
-            {time: 0, value: from},
-            {time: lifeTime, value: to, transition: 'linear'},
-          ]
-        },
-        {
-          name: 'modelRotation',
-          keyFrames: [
-            {time: 0, value: params.rotation},
-          ]
-        },
-        {
-          name: 'modelScale',
-          keyFrames: [
-            {time: 0, value: [0, 0, 0]},
-            {time: fadeTime, value: [parrotScale, parrotScale, parrotScale], transition: 'easeOutElastic'},
-            {time: lifeTime - fadeTime, value: null},
-            {time: lifeTime, value: [0, 0, 0], transition: 'easeInElastic'},
-          ]
-        },
-        {
-          name: 'voxelRotation',
-          keyFrames: [
-            {time: 0, value: [2, 4]},
-            {time: fadeTime, value: [0, 0]},
-            {time: lifeTime - fadeTime, value: null},
-            {time: lifeTime, value: [-2, -4]},
-          ]
-        },
-      ]
+      properties: properties,
     };
   }
 

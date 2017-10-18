@@ -89,7 +89,7 @@ void main(void) {
     scene = {
       time: 0,
       lastTimestamp: 0,
-      view: makeViewMatrix([0, 0, 100])
+      view: makeViewMatrix([0, 0, 100]),
     };
     particles = [];
     particleGenerators = [];
@@ -153,7 +153,7 @@ void main(void) {
 
     const projection = mat4.create();
     const fovy = 0.5;
-    const aspect = gl.canvas.width / gl.canvas.height;
+    const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
     const near = 0.001;
     const far = 10000;
     mat4.perspective(projection, fovy, aspect, near, far);
@@ -215,6 +215,7 @@ void main(void) {
         modelScale: [1, 1, 1],
         voxelScale: [1, 1, 1],
         voxelRotation: [0, 0, 0],
+        wireframe: [0],
       };
     }
   }
@@ -316,7 +317,13 @@ void main(void) {
     gl.enableVertexAttribArray(voxelColorAttrLoc);
     gl.vertexAttribPointer(voxelColorAttrLoc, 4, gl.FLOAT, false, 0, 0);
 
-    ext.drawElementsInstancedANGLE(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0, resolution * resolution);
+    ext.drawElementsInstancedANGLE(
+      gl[particle.wireframe[0] ? 'LINES' : 'TRIANGLES'],
+      indices.length,
+      gl.UNSIGNED_SHORT,
+      0,
+      resolution * resolution
+    );
   }
 
   function update(gl, timestamp) {
